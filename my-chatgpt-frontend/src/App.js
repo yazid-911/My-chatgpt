@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { sendMessage, getConversations } from './api';
 import './App.css';
@@ -5,6 +6,7 @@ import './App.css';
 function App() {
   const [message, setMessage] = useState('');
   const [conversation, setConversation] = useState([]);
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -23,22 +25,34 @@ function App() {
     }
   };
 
-  useEffect(() => {
-    async function fetchConversations() {
-      try {
-        const data = await getConversations();
-        // Aplatir les conversations en un tableau de messages
-        setConversation(data.flatMap(conv => conv.messages));
-      } catch (error) {
-        console.error(error);
-      }
+  //l'historique des conversations
+  const handleLoadConversations = async () => {
+    try {
+      const data = await getConversations();
+      setConversation(data.flatMap(conv => conv.messages));
+    } catch (error) {
+      console.error(error);
     }
-    fetchConversations();
+  };
+
+  // Réinitialisee l'affichage pour démarrer une nouvelle conversation
+  const handleNewChat = () => {
+    setConversation([]);
+  };
+
+  useEffect(() => {
+
   }, []);
 
   return (
     <div className="app-container">
-      <h1>Mon ChatGPT</h1>
+      <h1>Noesis</h1>
+      
+      <div className="buttons-container">
+        <button onClick={handleLoadConversations}>Anciennes Conversations</button>
+        <button onClick={handleNewChat}>Nouveau Chat</button>
+      </div>
+      
       <div className="chat-container">
         {conversation.map((msg, index) => (
           <div key={index} className={`message ${msg.role}`}>
@@ -46,6 +60,7 @@ function App() {
           </div>
         ))}
       </div>
+      
       <form className="chat-form" onSubmit={handleSubmit}>
         <input
           type="text"
