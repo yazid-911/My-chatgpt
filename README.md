@@ -23,7 +23,7 @@ A full-stack chatbot application using the MERN stack.
 
    npm start
 
-### Backend
+### Frontend
 1. **Navigate to the frontend folder:**
 
    cd my-chatgpt-frontend
