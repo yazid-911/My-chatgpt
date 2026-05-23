@@ -59,9 +59,20 @@ body {
 
 .chat-container {
   flex: 1;
+  display: flex;
+  flex-direction: column;
   padding: 1rem;
   overflow-y: auto;
   background-color: #1e1e1e;
+}
+
+.error-banner {
+  margin: 1rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid #d9534f;
+  border-radius: 6px;
+  background-color: rgba(217, 83, 79, 0.15);
+  color: #ffb3b0;
 }
 
 .message {
