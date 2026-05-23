@@ -29,11 +29,36 @@ spec:
         env:
         - name: PORT
           value: "3000"
-        - name: MONGODB_URI
+        - name: MONGODB_HOST
           valueFrom:
             secretKeyRef:
               name: my-chatgpt-secret
-              key: MONGODB_URI
+              key: MONGODB_HOST
+        - name: MONGODB_PORT
+          valueFrom:
+            secretKeyRef:
+              name: my-chatgpt-secret
+              key: MONGODB_PORT
+        - name: MONGODB_DB_NAME
+          valueFrom:
+            secretKeyRef:
+              name: my-chatgpt-secret
+              key: MONGODB_DB_NAME
+        - name: MONGODB_AUTH_SOURCE
+          valueFrom:
+            secretKeyRef:
+              name: my-chatgpt-secret
+              key: MONGODB_AUTH_SOURCE
+        - name: MONGODB_ROOT_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: mongodb-auth
+              key: MONGODB_ROOT_USERNAME
+        - name: MONGODB_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mongodb-auth
+              key: MONGODB_ROOT_PASSWORD
         - name: HUGGINGFACE_TOKEN
           valueFrom:
             secretKeyRef:

@@ -10,8 +10,28 @@ dotenv.config({ path: path.resolve(__dirname, '../.env') });
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Connect to MongoDB using either a local backend .env or the repo root .env.
-mongoose.connect(process.env.MONGODB_URI)
+const buildMongoUri = () => {
+  if (process.env.MONGODB_URI) {
+    return process.env.MONGODB_URI;
+  }
+
+  const host = process.env.MONGODB_HOST || 'localhost';
+  const port = process.env.MONGODB_PORT || '27017';
+  const dbName = process.env.MONGODB_DB_NAME || 'mychatgpt';
+  const authSource = process.env.MONGODB_AUTH_SOURCE || 'admin';
+  const username = process.env.MONGODB_ROOT_USERNAME;
+  const password = process.env.MONGODB_ROOT_PASSWORD;
+
+  if (username && password) {
+    return `mongodb://${encodeURIComponent(username)}:${encodeURIComponent(password)}@${host}:${port}/${dbName}?authSource=${encodeURIComponent(authSource)}`;
+  }
+
+  return `mongodb://${host}:${port}/${dbName}`;
+};
+
+const mongoUri = buildMongoUri();
+
+mongoose.connect(mongoUri)
   .then(() => console.log('MongoDB connected'))
   .catch((err) => console.error('MongoDB connection error:', err));
 

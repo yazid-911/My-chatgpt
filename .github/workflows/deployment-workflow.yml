@@ -105,7 +105,10 @@ jobs:
 
           kubectl create secret generic my-chatgpt-secret \
             --namespace "${K8S_NAMESPACE}" \
-            --from-literal=MONGODB_URI="mongodb://${MONGODB_ROOT_USERNAME}:${MONGODB_ROOT_PASSWORD}@mongodb:27017/mychatgpt?authSource=admin" \
+            --from-literal=MONGODB_HOST="mongodb" \
+            --from-literal=MONGODB_PORT="27017" \
+            --from-literal=MONGODB_DB_NAME="mychatgpt" \
+            --from-literal=MONGODB_AUTH_SOURCE="admin" \
             --from-literal=HUGGINGFACE_TOKEN="${HUGGINGFACE_TOKEN}" \
             --from-literal=HUGGINGFACE_API_URL="${HUGGINGFACE_API_URL}" \
             --from-literal=HUGGINGFACE_MODEL="${HUGGINGFACE_MODEL}" \
