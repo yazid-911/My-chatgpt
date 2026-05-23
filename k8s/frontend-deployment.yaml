@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-chatgpt-frontend
+  labels:
+    app: my-chatgpt-frontend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: my-chatgpt-frontend
+  template:
+    metadata:
+      labels:
+        app: my-chatgpt-frontend
+    spec:
+      containers:
+      - name: frontend
+        image: docker.io/yazidbouha/my-chatgpt-frontend:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 80
+          name: http
+        env:
+        - name: REACT_APP_API_URL
+          value: "/api"
+        livenessProbe:
+          httpGet:
+            path: /index.html
+            port: 80
+          initialDelaySeconds: 15
+          periodSeconds: 20
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /index.html
+            port: 80
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
