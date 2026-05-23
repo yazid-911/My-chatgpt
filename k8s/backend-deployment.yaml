@@ -5,7 +5,12 @@ metadata:
   labels:
     app: my-chatgpt-backend
 spec:
-  replicas: 2
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
   selector:
     matchLabels:
       app: my-chatgpt-backend
@@ -64,8 +69,8 @@ spec:
           failureThreshold: 3
         resources:
           requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
             memory: "256Mi"
             cpu: "250m"
-          limits:
-            memory: "512Mi"
-            cpu: "500m"
