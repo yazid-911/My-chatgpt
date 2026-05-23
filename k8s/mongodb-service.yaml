@@ -5,7 +5,8 @@ metadata:
   labels:
     app: mongodb
 spec:
-  type: ClusterIP
+  clusterIP: None
+  publishNotReadyAddresses: true
   selector:
     app: mongodb
   ports:

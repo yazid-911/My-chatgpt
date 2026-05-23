@@ -105,7 +105,7 @@ jobs:
 
           kubectl create secret generic my-chatgpt-secret \
             --namespace "${K8S_NAMESPACE}" \
-            --from-literal=MONGODB_HOST="mongodb" \
+            --from-literal=MONGODB_HOST="mongodb-0.mongodb.${K8S_NAMESPACE}.svc.cluster.local" \
             --from-literal=MONGODB_PORT="27017" \
             --from-literal=MONGODB_DB_NAME="mychatgpt" \
             --from-literal=MONGODB_AUTH_SOURCE="admin" \
@@ -116,6 +116,7 @@ jobs:
 
       - name: Apply Kubernetes manifests
         run: |
+          kubectl delete service mongodb -n "${K8S_NAMESPACE}" --ignore-not-found=true
           kubectl apply -n "${K8S_NAMESPACE}" -f k8s/mongodb-service.yaml
           kubectl apply -n "${K8S_NAMESPACE}" -f k8s/mongodb-statefulset.yaml
           kubectl apply -n "${K8S_NAMESPACE}" -f k8s/backend-service.yaml
