@@ -91,14 +91,21 @@ jobs:
 
       - name: Create or update backend secret
         env:
-          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          MONGODB_ROOT_USERNAME: ${{ secrets.MONGODB_ROOT_USERNAME }}
+          MONGODB_ROOT_PASSWORD: ${{ secrets.MONGODB_ROOT_PASSWORD }}
           HUGGINGFACE_TOKEN: ${{ secrets.HUGGINGFACE_TOKEN }}
           HUGGINGFACE_API_URL: ${{ secrets.HUGGINGFACE_API_URL }}
           HUGGINGFACE_MODEL: ${{ secrets.HUGGINGFACE_MODEL }}
         run: |
+          kubectl create secret generic mongodb-auth \
+            --namespace "${K8S_NAMESPACE}" \
+            --from-literal=MONGODB_ROOT_USERNAME="${MONGODB_ROOT_USERNAME}" \
+            --from-literal=MONGODB_ROOT_PASSWORD="${MONGODB_ROOT_PASSWORD}" \
+            --dry-run=client -o yaml | kubectl apply -f -
+
           kubectl create secret generic my-chatgpt-secret \
             --namespace "${K8S_NAMESPACE}" \
-            --from-literal=MONGODB_URI="${MONGODB_URI}" \
+            --from-literal=MONGODB_URI="mongodb://${MONGODB_ROOT_USERNAME}:${MONGODB_ROOT_PASSWORD}@mongodb:27017/mychatgpt?authSource=admin" \
             --from-literal=HUGGINGFACE_TOKEN="${HUGGINGFACE_TOKEN}" \
             --from-literal=HUGGINGFACE_API_URL="${HUGGINGFACE_API_URL}" \
             --from-literal=HUGGINGFACE_MODEL="${HUGGINGFACE_MODEL}" \
@@ -106,6 +113,8 @@ jobs:
 
       - name: Apply Kubernetes manifests
         run: |
+          kubectl apply -n "${K8S_NAMESPACE}" -f k8s/mongodb-service.yaml
+          kubectl apply -n "${K8S_NAMESPACE}" -f k8s/mongodb-statefulset.yaml
           kubectl apply -n "${K8S_NAMESPACE}" -f k8s/backend-service.yaml
           kubectl apply -n "${K8S_NAMESPACE}" -f k8s/backend-deployment.yaml
           kubectl apply -n "${K8S_NAMESPACE}" -f k8s/frontend-service.yaml
@@ -122,6 +131,7 @@ jobs:
 
       - name: Wait for rollout
         run: |
+          kubectl rollout status statefulset/mongodb -n "${K8S_NAMESPACE}" --timeout=10m
           kubectl rollout status deployment/my-chatgpt-backend -n "${K8S_NAMESPACE}" --timeout=5m
           kubectl rollout status deployment/my-chatgpt-frontend -n "${K8S_NAMESPACE}" --timeout=5m
 
