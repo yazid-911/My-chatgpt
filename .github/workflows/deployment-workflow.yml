@@ -28,6 +28,26 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # ── Cache 1 : dépendances Node.js — backend ──────────────────────────
+      # Clé = hash de package-lock.json.
+      # Si le fichier n'a pas changé → node_modules restauré en ~5 s.
+      - name: Cache node_modules (backend)
+        uses: actions/cache@v4
+        with:
+          path: backend-dev/node_modules
+          key: backend-node-${{ runner.os }}-${{ hashFiles('backend-dev/package-lock.json') }}
+          restore-keys: |
+            backend-node-${{ runner.os }}-
+
+      # ── Cache 2 : dépendances Node.js — frontend ─────────────────────────
+      - name: Cache node_modules (frontend)
+        uses: actions/cache@v4
+        with:
+          path: my-chatgpt-frontend/node_modules
+          key: frontend-node-${{ runner.os }}-${{ hashFiles('my-chatgpt-frontend/package-lock.json') }}
+          restore-keys: |
+            frontend-node-${{ runner.os }}-
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -37,6 +57,11 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      # ── Cache 3 : layers Docker — backend ────────────────────────────────
+      # cache-from : tire les layers déjà poussés sur Docker Hub.
+      # cache-to   : pousse les nouveaux layers sous le tag :buildcache.
+      # Résultat : si seul le code source a changé, les layers
+      # FROM / npm ci sont restaurés depuis le registry (~30 s au lieu de ~3 min).
       - name: Build and push backend image
         uses: docker/build-push-action@v6
         with:
@@ -45,7 +70,10 @@ jobs:
           tags: |
             docker.io/${{ env.DOCKERHUB_NAMESPACE }}/${{ env.BACKEND_IMAGE_NAME }}:${{ github.sha }}
             docker.io/${{ env.DOCKERHUB_NAMESPACE }}/${{ env.BACKEND_IMAGE_NAME }}:latest
+          cache-from: type=registry,ref=docker.io/${{ env.DOCKERHUB_NAMESPACE }}/${{ env.BACKEND_IMAGE_NAME }}:buildcache
+          cache-to: type=registry,ref=docker.io/${{ env.DOCKERHUB_NAMESPACE }}/${{ env.BACKEND_IMAGE_NAME }}:buildcache,mode=max
 
+      # ── Cache 4 : layers Docker — frontend ───────────────────────────────
       - name: Build and push frontend image
         uses: docker/build-push-action@v6
         with:
@@ -54,7 +82,12 @@ jobs:
           tags: |
             docker.io/${{ env.DOCKERHUB_NAMESPACE }}/${{ env.FRONTEND_IMAGE_NAME }}:${{ github.sha }}
             docker.io/${{ env.DOCKERHUB_NAMESPACE }}/${{ env.FRONTEND_IMAGE_NAME }}:latest
+          cache-from: type=registry,ref=docker.io/${{ env.DOCKERHUB_NAMESPACE }}/${{ env.FRONTEND_IMAGE_NAME }}:buildcache
+          cache-to: type=registry,ref=docker.io/${{ env.DOCKERHUB_NAMESPACE }}/${{ env.FRONTEND_IMAGE_NAME }}:buildcache,mode=max
 
+  # ─────────────────────────────────────────────────────────────────────────
+  # Job deploy-to-gke : inchangé
+  # ─────────────────────────────────────────────────────────────────────────
   deploy-to-gke:
     name: Deploy to GKE
     runs-on: ubuntu-latest
